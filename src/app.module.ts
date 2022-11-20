@@ -8,6 +8,7 @@ import { CatsModule } from './cats/cats.module';
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer.apply(LoggerMiddleware).forRoutes('cats');
-    // consumer.apply(logger).forRoutes(CatsController); //関数ミドルウェアの仕様
+    // consumer.apply(logger).forRoutes(CatsController); //関数ミドルウェアの使用
+    // consumer.apply(cors(), helmet(), logger).forRoutes(CatsController); // マルチプルミドルウェア
   }
 }

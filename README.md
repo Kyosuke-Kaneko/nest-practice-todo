@@ -1,73 +1,83 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="200" alt="Nest Logo" /></a>
-</p>
+# メモ
+https://zenn.dev/kisihara_c/books/nest-officialdoc-jp
+## 03-overview-controllers
+コントローラは常にモジュールに属している為、コントローラの配列を@Module()デコレータに含めている。ルートのAppModule以外のモジュールを定義してCatsControllerを導入する。
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+app.module.ts
+```
+import { Module } from '@nestjs/common';
+import { CatsController } from './cats/cats.controller';
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
-
-## Description
-
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
-
-## Installation
-
-```bash
-$ npm install
+@Module({
+  controllers: [CatsController],
+})
+export class AppModule {}
 ```
 
-## Running the app
+モジュールクラスに@Module()デコレータを使ってメタデータをアタッチすれば、どのコントローラをマウントするか簡単に設定できる。
 
-```bash
-# development
-$ npm run start
+## 04-overview-providers
+プロパイダはNestの基本的な概念である。Nestの基本的なクラスの多く――サービス、リポジトリ、ファクトリ、ヘルパー他――はプロバイダとして扱われる、とも言える。プロバイダについて主要なスタンスは、依存関係をインジェクション（注入）する事である。インジェクションによってオブジェクト同士は様々な依存関係を形作る事ができる。
 
-# watch mode
-$ npm run start:dev
+プロパティベースインジェクション
+もしトップレベルのクラスが１つまたは複数のプロバイダに依存している場合、コンストラクタからサブクラスのsuper()を呼び出してすべて渡していくのは非常に面倒な作業になる。それを避ける為には、プロパティレベルで@Injectデコレータを使用する。
 
-# production mode
-$ npm run start:prod
+```
+import { Injectable, Inject } from '@nestjs/common';
+
+@Injectable()
+export class HttpService<T> {
+  @Inject('HTTP_OPTIONS')
+  private readonly httpClient: T;
+}
 ```
 
-## Test
+## 05-overview-modules
+### 共有モジュール
+Nestにおいてはモジュールは標準でシングルトンである為、複数のモジュール間で任意のプロバイダのインスタンスを共有できる。
+すべてのモジュールは自動的に共有モジュールとなる。一度作成されたモジュールは、全てのモジュールで再利用できる。
+例えば、CatsServiceのインスタンスを他の複数のモジュール間で共有したい場合をイメージする。まず、CatsServiceプロバイダをモジュールのexports配列に追加し、エクスポートする。
 
-```bash
-# unit tests
-$ npm run test
+cats.module.ts
+```
+import { Module } from '@nestjs/common';
+import { CatsController } from './cats.controller';
+import { CatsService } from './cats.service';
 
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+@Module({
+ controllers: [CatsController],
+ providers: [CatsService],
+ exports: [CatsService]
+})
+export class CatsModule {}
 ```
 
-## Support
+CatsModuleをインポートしたモジュールはCatsServiceにアクセスでき、CatServiceをインポートした他のすべてのモジュールと同じインスタンスを共有します。
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+## 08-overview-pipes
+### パイプ
+パイプは@Injectable()デコレータで装飾されたクラスだ。PipeTransformインターフェイスの実装が必要となる。
 
-## Stay in touch
+パイプには２つのユースケースがある。
 
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+変換：入力データを希望の形に変換する（例：文字列→整数）
+検証：入力データを評価し、データが正しければそのまま実行を続け、データが間違っていれば例外をthrowする
 
-## License
+いずれもパイプはコントローラのルートハンドラによって処理されるargumentsを操作する。Nestはメソッドが呼び出される直前にパイプを挿入し、パイプはメソッドの引数を受け取って処理する。変換・検証はその時点で行われ、最後に変換された（かもしれない）引数でルートハンドラが呼び出される。
 
-Nest is [MIT licensed](LICENSE).
+## 09-overview-guard
+### ガード
+ガードは@Injectable()デコレータで装飾されたクラスです。ガードはCanActivateインターフェイスを実装する必要がある。
+ガードが持つ責任は一つ。ランタイムに存在する特定の条件（パーミッション、ロール、ACL等）に依存して、与えられたリクエストがルートハンドラによって処理されるかどうかを決定する事。これはしばしば認可と呼ばれる。認可（と、通常一緒に動く親戚的な存在の「認証」）は、伝統的なExpressアプリケーションでは通常ミドルウェアで処理されてきた。トークンの検証やリクエストオブジェクトへのプロパティのアタッチのような事柄は、特定のルートコンテキスト（とそのメタデータ）にはあまり関係がないので、ミドルウェアは検証には最適な選択といえる。
+しかし、ミドルウェアはその性質上少し頭が弱い。next()関数を呼び出した後どのハンドラが呼ばれるかを把握していない。一方ガードはExecutionContextインスタンスにアクセスできる為、次に何が実行されるかを確かめられる。ガードは、例外フィルタやパイプ、インターセプタと同様に、リクエスト/レスポンスのサイクルの適切なタイミングで処理ロジックを挿入できるように設計されており、宣言的に処理を行う事ができる。よって、コードをDRYで宣言的なものに保つ事ができる。
+
+## 10-overview-interceptors
+### インターセプター
+インターセプターは@Injectable()デコレータでアノテーションされたクラスだ。NestInterceptorインターフェースを実装する必要がある。
+インターセプターはアスペクト指向プログラミング（AOP）の技術に触発された便利な機能を持ち、以下の事が可能になっている。
+
+- メソッドの前後に追加のロジックをバインド
+- 関数の結果を変換
+- 関数からthrowされた例外を変換
+- 基本関数の動作を拡張
+（例えばキャッシュを目的として）特定の条件で関数を完全にオーバーライドする。

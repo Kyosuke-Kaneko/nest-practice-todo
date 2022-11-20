@@ -47,7 +47,7 @@ export class CatsController {
   //     return 'This action adds a new cat';
   //   }
 
-  //フィルターの検証
+  //フィルターの検証 HttpExceptionFilterは単一のcreate()ルート・ハンドラにのみ適用され、メソッドでスコープ化されている
   //   @Post()
   //   @UseFilters(new HttpExceptionFilter())
   //   async create(@Body() createCatDto: CreateCatDto) {
